@@ -1,0 +1,284 @@
+// =============================================================
+//  DRONE APP — Prisma Schema
+//  Base de datos: PostgreSQL
+// =============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================
+//  ENUMS
+// =============================================================
+
+enum EstadoProyecto {
+  FALTA_COTIZAR
+  FALTA_OC
+  EN_EJECUCION
+  FACTURADO
+  FALTA_COBRAR
+  COBRADO
+}
+
+enum Moneda {
+  USD
+  UYU
+}
+
+enum TipoIVA {
+  CERO      // 0%
+  BASICO    // 22%
+}
+
+enum TipoColaborador {
+  SOCIO
+  EMPLEADO
+}
+
+enum TipoEgreso {
+  EGRESO
+  DEVOLUCION
+}
+
+enum EstadoEgreso {
+  PAGADO
+  PENDIENTE
+}
+
+enum TipoArchivo {
+  COTIZACION
+  ORDEN_COMPRA
+  FACTURA
+  COMPROBANTE_EGRESO
+}
+
+// =============================================================
+//  CLIENTE
+// =============================================================
+
+model Cliente {
+  id          Int          @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  rut         String?      @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  referentes  Referente[]
+  proyectos   Proyecto[]
+
+  @@map("clientes")
+}
+
+model Referente {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  mail      String?
+  celular   String?
+  clienteId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  proyectos Proyecto[]
+
+  @@map("referentes")
+}
+
+// =============================================================
+//  COLABORADOR
+// =============================================================
+
+model Colaborador {
+  id              Int             @id @default(autoincrement())
+  nombre          String
+  mail            String?         @unique
+  tipo            TipoColaborador
+  fechaAlta       DateTime
+  sueldoActual    Float           // sueldo vigente (cache)
+  porcentajeAcciones Float?       // solo para SOCIO
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  historialSueldos HistorialSueldo[]
+  egresos          Egreso[]
+
+  @@map("colaboradores")
+}
+
+// Traza cambios de sueldo en el tiempo (solo para EMPLEADO)
+model HistorialSueldo {
+  id            Int         @id @default(autoincrement())
+  colaboradorId Int
+  sueldo        Float
+  moneda        Moneda      @default(UYU)
+  fechaDesde    DateTime
+  fechaHasta    DateTime?   // null = vigente
+  motivo        String?
+  createdAt     DateTime    @default(now())
+
+  colaborador   Colaborador @relation(fields: [colaboradorId], references: [id], onDelete: Cascade)
+
+  @@map("historial_sueldos")
+}
+
+// =============================================================
+//  PROYECTO
+// =============================================================
+
+model Proyecto {
+  id                Int            @id @default(autoincrement())
+  nombre            String
+  estado            EstadoProyecto @default(FALTA_COTIZAR)
+
+  clienteId         Int
+  referenteId       Int?
+
+  numeroOC          String?
+  numeroFactura     String?
+
+  moneda            Moneda         @default(USD)
+  cotizacionDolar   Float?         // tipo de cambio al momento
+  tipoIVA           TipoIVA        @default(BASICO)
+
+  fechaFacturacion  DateTime?
+  fechaPosibleCobro DateTime?      // calculado: facturacion + 30 días
+  fechaCobroEfectivo DateTime?
+
+  // Montos — se almacenan los subtotales, el resto se calcula
+  subtotalUSD       Float?
+  subtotalUYU       Float?
+  // ivaUSD, ivaUYU, totalUSD, totalUYU → calculados en runtime
+
+  observacion       String?
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  cliente           Cliente        @relation(fields: [clienteId], references: [id])
+  referente         Referente?     @relation(fields: [referenteId], references: [id])
+  archivos          Archivo[]
+
+  @@map("proyectos")
+}
+
+// =============================================================
+//  ARCHIVO (documentos adjuntos a proyectos y egresos)
+// =============================================================
+
+model Archivo {
+  id          Int         @id @default(autoincrement())
+  tipo        TipoArchivo
+  nombre      String      // nombre original del archivo
+  path        String      // ruta en el filesystem / key en S3
+  mimetype    String?
+  tamanio     Int?        // bytes
+
+  proyectoId  Int?
+  egresoId    Int?
+
+  createdAt   DateTime    @default(now())
+
+  proyecto    Proyecto?   @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  egreso      Egreso?     @relation(fields: [egresoId], references: [id], onDelete: Cascade)
+
+  @@map("archivos")
+}
+
+// =============================================================
+//  EGRESO / DEVOLUCION
+// =============================================================
+
+model Egreso {
+  id            Int          @id @default(autoincrement())
+  fecha         DateTime
+  descripcion   String
+  tipo          TipoEgreso
+  monto         Float
+  moneda        Moneda
+  estado        EstadoEgreso @default(PENDIENTE)
+  colaboradorId Int?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  colaborador   Colaborador? @relation(fields: [colaboradorId], references: [id])
+  archivos      Archivo[]
+
+  @@map("egresos")
+}
+
+// =============================================================
+//  IMPUESTOS POR MES
+// =============================================================
+
+model ImpuestosMes {
+  id                  Int      @id @default(autoincrement())
+  anio                Int
+  mes                 Int      // 1-12
+
+  // Calculados automáticamente (editables)
+  ivaCalculado        Float    @default(0)
+  ivaReal             Float?   // si se edita manualmente
+
+  iraeCalculado       Float    @default(0)
+  iraeReal            Float?
+
+  patrimonioCalculado Float    @default(0)
+  patrimonioReal      Float?
+
+  bpsCalculado        Float    @default(0)
+  bpsReal             Float?
+
+  notas               NotaImpuesto[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([anio, mes])
+  @@map("impuestos_mes")
+}
+
+model NotaImpuesto {
+  id             Int          @id @default(autoincrement())
+  impuestosMesId Int
+  texto          String
+  createdAt      DateTime     @default(now())
+
+  impuestosMes   ImpuestosMes @relation(fields: [impuestosMesId], references: [id], onDelete: Cascade)
+
+  @@map("notas_impuesto")
+}
+
+// =============================================================
+//  ADMIN USER
+// =============================================================
+
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String   // bcrypt hash
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
+// =============================================================
+//  COTIZACIÓN BCU (cache diario)
+// =============================================================
+
+model CotizacionBCU {
+  id        Int      @id @default(autoincrement())
+  fecha     DateTime @unique @db.Date
+  compra    Float
+  venta     Float
+  createdAt DateTime @default(now())
+
+  @@map("cotizaciones_bcu")
+}

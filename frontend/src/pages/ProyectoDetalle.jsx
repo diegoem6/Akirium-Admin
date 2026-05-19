@@ -1,16 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { ArrowLeft, Upload, Trash2, FileText, Pencil, AlertTriangle } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { proyectosApi, clientesApi } from '../api';
 import { LoadingSpinner, ErrorMessage, Badge, Monto, ConfirmDialog } from '../components/ui';
 import ProyectoForm from '../components/ProyectoForm';
-
-function toDateInput(val) {
-  if (!val) return '';
-  return format(new Date(val), 'yyyy-MM-dd');
-}
+import { fmtFecha, toDateInput } from '../utils/dates';
 
 export default function ProyectoDetalle() {
   const { id } = useParams();
@@ -140,9 +135,9 @@ export default function ProyectoDetalle() {
           </div>
 
           <div className="grid grid-cols-3 gap-4 py-4">
-            <div><p className="text-xs text-gray-500">Facturación</p><p className="font-medium text-sm">{p.fechaFacturacion ? format(new Date(p.fechaFacturacion), 'dd/MM/yyyy') : '—'}</p></div>
-            <div><p className="text-xs text-gray-500">Posible cobro</p><p className="font-medium text-sm">{p.fechaPosibleCobro ? format(new Date(p.fechaPosibleCobro), 'dd/MM/yyyy') : '—'}</p></div>
-            <div><p className="text-xs text-gray-500">Cobro efectivo</p><p className="font-medium text-sm">{p.fechaCobroEfectivo ? format(new Date(p.fechaCobroEfectivo), 'dd/MM/yyyy') : '—'}</p></div>
+            <div><p className="text-xs text-gray-500">Facturación</p><p className="font-medium text-sm">{fmtFecha(p.fechaFacturacion)}</p></div>
+            <div><p className="text-xs text-gray-500">Posible cobro</p><p className="font-medium text-sm">{fmtFecha(p.fechaPosibleCobro)}</p></div>
+            <div><p className="text-xs text-gray-500">Cobro efectivo</p><p className="font-medium text-sm">{fmtFecha(p.fechaCobroEfectivo)}</p></div>
           </div>
 
           {p.observacion && (

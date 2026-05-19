@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Eye, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { fmtFecha } from '../utils/dates';
 import { proyectosApi, clientesApi } from '../api';
 import {
   LoadingSpinner, ErrorMessage, Modal, Badge, PageHeader,
@@ -99,7 +99,7 @@ export default function Proyectos() {
                   <td className="table-cell"><Monto value={p.totalUSD} moneda="USD" /></td>
                   <td className="table-cell"><Monto value={p.totalUYU} moneda="UYU" /></td>
                   <td className="table-cell text-gray-500">
-                    {p.fechaFacturacion ? format(new Date(p.fechaFacturacion), 'dd/MM/yyyy') : '—'}
+                    {fmtFecha(p.fechaFacturacion)}
                   </td>
                   <td className="table-cell">
                     <button

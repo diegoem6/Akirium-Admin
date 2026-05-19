@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard, FolderKanban, Users, UserCheck,
-  ArrowDownCircle, Receipt, TrendingUp,
+  ArrowDownCircle, Receipt, TrendingUp, FileSpreadsheet,
   Plane, LogOut
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -15,6 +15,7 @@ const NAV = [
   { to: '/egresos',        label: 'Egresos',         icon: ArrowDownCircle },
   { to: '/impuestos',      label: 'Impuestos',       icon: Receipt },
   { to: '/flujo-caja',     label: 'Flujo de Caja',   icon: TrendingUp },
+  { to: '/liquidaciones',  label: 'Liquidaciones',   icon: FileSpreadsheet },
 ];
 
 export default function Layout() {

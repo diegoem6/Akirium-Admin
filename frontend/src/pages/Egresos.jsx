@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Plus, Upload, Trash2, Pencil } from 'lucide-react';
-import { format } from 'date-fns';
+import { fmtFecha, toDateInput } from '../utils/dates';
 import { egresosApi, colaboradoresApi } from '../api';
 import {
   LoadingSpinner, ErrorMessage, Modal, PageHeader, Field,
@@ -152,7 +152,7 @@ export default function Egresos() {
             <tbody className="divide-y divide-gray-100">
               {egresos.map(e => (
                 <tr key={e.id} className="hover:bg-gray-50">
-                  <td className="table-cell text-gray-500">{format(new Date(e.fecha), 'dd/MM/yyyy')}</td>
+                  <td className="table-cell text-gray-500">{fmtFecha(e.fecha)}</td>
                   <td className="table-cell max-w-xs truncate">{e.descripcion}</td>
                   <td className="table-cell"><Badge value={e.tipo} /></td>
                   <td className="table-cell font-medium"><Monto value={e.monto} moneda={e.moneda} /></td>
@@ -216,7 +216,7 @@ export default function Egresos() {
           <EgresoForm
             key={editEgreso.id}
             defaultValues={{
-              fecha:         format(new Date(editEgreso.fecha), 'yyyy-MM-dd'),
+              fecha:         toDateInput(editEgreso.fecha),
               descripcion:   editEgreso.descripcion,
               tipo:          editEgreso.tipo,
               monto:         editEgreso.monto,

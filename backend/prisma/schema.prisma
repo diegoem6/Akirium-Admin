@@ -108,6 +108,7 @@ model Colaborador {
 
   historialSueldos HistorialSueldo[]
   egresos          Egreso[]
+  liquidaciones    LiquidacionEmpleado[]
 
   @@map("colaboradores")
 }
@@ -267,6 +268,44 @@ model AdminUser {
   updatedAt DateTime @updatedAt
 
   @@map("admin_users")
+}
+
+// =============================================================
+//  LIQUIDACIÓN MENSUAL POR EMPLEADO
+// =============================================================
+
+model LiquidacionEmpleado {
+  id                  Int         @id @default(autoincrement())
+  colaboradorId       Int
+  anio                Int
+  mes                 Int         // 1-12
+
+  // Snapshot calculado al momento del GET
+  brutoCalculado      Float
+  bpsCalculado        Float
+  irpfCalculado       Float
+  netoCalculado       Float
+  patronalCalculado   Float
+  costoTotalCalculado Float
+
+  // Overrides manuales (null = usar calculado)
+  brutoReal           Float?
+  bpsReal             Float?
+  irpfReal            Float?
+  netoReal            Float?
+  patronalReal        Float?
+
+  // Estado del pago
+  pagado              Boolean  @default(false)
+  egresoId            Int?     // ID del egreso creado al pagar
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  colaborador         Colaborador @relation(fields: [colaboradorId], references: [id], onDelete: Cascade)
+
+  @@unique([colaboradorId, anio, mes])
+  @@map("liquidaciones_empleados")
 }
 
 // =============================================================

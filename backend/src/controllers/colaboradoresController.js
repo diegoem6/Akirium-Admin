@@ -53,10 +53,30 @@ async function crear(req, res) {
 
 async function actualizar(req, res) {
   const id = parseInt(req.params.id);
-  const colaborador = await prisma.colaborador.update({
-    where: { id },
-    data: req.body,
+
+  const colaborador = await prisma.$transaction(async (tx) => {
+    const updated = await tx.colaborador.update({
+      where: { id },
+      data: req.body,
+    });
+
+    // Si cambió fechaAlta, sincronizar el primer registro de historial
+    if (req.body.fechaAlta) {
+      const inicial = await tx.historialSueldo.findFirst({
+        where: { colaboradorId: id },
+        orderBy: { fechaDesde: 'asc' },
+      });
+      if (inicial) {
+        await tx.historialSueldo.update({
+          where: { id: inicial.id },
+          data: { fechaDesde: new Date(req.body.fechaAlta) },
+        });
+      }
+    }
+
+    return updated;
   });
+
   res.json(colaborador);
 }
 

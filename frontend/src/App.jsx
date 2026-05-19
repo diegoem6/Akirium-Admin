@@ -11,6 +11,7 @@ import ColaboradorDetalle from './pages/ColaboradorDetalle';
 import Egresos from './pages/Egresos';
 import Impuestos from './pages/Impuestos';
 import FlujoCaja from './pages/FlujoCaja';
+import Liquidaciones from './pages/Liquidaciones';
 import { useAuth } from './context/AuthContext';
 
 function PrivateRoute({ children }) {
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="egresos"               element={<Egresos />} />
         <Route path="impuestos"             element={<Impuestos />} />
         <Route path="flujo-caja"            element={<FlujoCaja />} />
+        <Route path="liquidaciones"         element={<Liquidaciones />} />
       </Route>
     </Routes>
   );

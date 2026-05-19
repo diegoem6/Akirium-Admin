@@ -74,3 +74,11 @@ export const bcuApi = {
   cotizacion: (fecha) => api.get('/bcu/cotizacion', { params: fecha ? { fecha } : {} }).then(r => r.data),
   actualizar: () => api.post('/bcu/actualizar').then(r => r.data),
 };
+
+// ─── Liquidaciones ─────────────────────────────────────────────
+export const liquidacionesApi = {
+  get:          (anio, mes)               => api.get(`/liquidaciones/${anio}/${mes}`).then(r => r.data),
+  actualizar:   (anio, mes, colabId, data) => api.put(`/liquidaciones/${anio}/${mes}/${colabId}`, data).then(r => r.data),
+  pagar:        (anio, mes, colabId)       => api.post(`/liquidaciones/${anio}/${mes}/${colabId}/pagar`).then(r => r.data),
+  revertirPago: (anio, mes, colabId)       => api.delete(`/liquidaciones/${anio}/${mes}/${colabId}/pago`),
+};

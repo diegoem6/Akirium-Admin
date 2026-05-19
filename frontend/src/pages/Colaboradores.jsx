@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Plus, Eye, TrendingUp, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { fmtFecha } from '../utils/dates';
 import { useNavigate } from 'react-router-dom';
 import { colaboradoresApi } from '../api';
 import {
@@ -106,7 +106,7 @@ export default function Colaboradores() {
                   <td className="table-cell text-gray-500">{c.mail || '—'}</td>
                   <td className="table-cell"><Badge value={c.tipo} /></td>
                   <td className="table-cell text-gray-500">
-                    {format(new Date(c.fechaAlta), 'dd/MM/yyyy')}
+                    {fmtFecha(c.fechaAlta)}
                   </td>
                   <td className="table-cell">
                     <Monto value={c.sueldoActual} moneda="UYU" />

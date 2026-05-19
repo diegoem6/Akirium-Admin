@@ -3,8 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { fmtFecha } from '../utils/dates';
 import { dashboardApi } from '../api';
 import { LoadingSpinner, ErrorMessage, StatCard, Badge, Monto } from '../components/ui';
 
@@ -97,9 +96,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-700">
-                    {p.fechaPosibleCobro
-                      ? format(new Date(p.fechaPosibleCobro), 'dd/MM/yyyy')
-                      : '—'}
+                    {fmtFecha(p.fechaPosibleCobro)}
                   </p>
                   <Monto
                     value={p.totalUSD || p.totalUYU}

@@ -19,7 +19,8 @@ const egresosRoutes = require('./routes/egresos');
 const impuestosRoutes = require('./routes/impuestos');
 const flujoCajaRoutes = require('./routes/flujoCaja');
 const dashboardRoutes = require('./routes/dashboard');
-const bcuRoutes = require('./routes/bcu');
+const bcuRoutes          = require('./routes/bcu');
+const liquidacionesRoutes = require('./routes/liquidaciones');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -52,6 +53,7 @@ app.use('/api/impuestos', impuestosRoutes);
 app.use('/api/flujo-caja', flujoCajaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/bcu', bcuRoutes);
+app.use('/api/liquidaciones', liquidacionesRoutes);
 
 // ─── Error handler global ───────────────────────────────────────
 app.use(errorHandler);

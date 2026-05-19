@@ -1,6 +1,7 @@
 // prisma/seed.js
 // Ejecutar con: node prisma/seed.js
 
+require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();

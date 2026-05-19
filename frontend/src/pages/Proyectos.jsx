@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Eye } from 'lucide-react';
+import { Plus, Search, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { proyectosApi, clientesApi } from '../api';
 import {
@@ -18,6 +18,7 @@ export default function Proyectos() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [confirm, setConfirm] = useState(null);
 
   const { data: proyectos = [], isLoading, error } = useQuery({
     queryKey: ['proyectos', filtroEstado],
@@ -32,6 +33,11 @@ export default function Proyectos() {
   const crear = useMutation({
     mutationFn: proyectosApi.crear,
     onSuccess: () => { qc.invalidateQueries(['proyectos']); setModalOpen(false); },
+  });
+
+  const eliminar = useMutation({
+    mutationFn: proyectosApi.eliminar,
+    onSuccess: () => { qc.invalidateQueries(['proyectos']); setConfirm(null); },
   });
 
   const filtrados = proyectos.filter(p =>
@@ -78,7 +84,7 @@ export default function Proyectos() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Proyecto','Cliente','Estado','Moneda','Total USD','Total UYU','Facturación',''].map(h => (
+                {['Proyecto','Cliente','Estado','Moneda','Total USD','Total UYU','Facturación','',''].map(h => (
                   <th key={h} className="table-header">{h}</th>
                 ))}
               </tr>
@@ -103,6 +109,14 @@ export default function Proyectos() {
                       <Eye size={16} />
                     </button>
                   </td>
+                  <td className="table-cell">
+                    <button
+                      onClick={() => setConfirm(p)}
+                      className="btn-ghost p-1.5 text-red-500"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -118,6 +132,14 @@ export default function Proyectos() {
           onCancel={() => setModalOpen(false)}
         />
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirm}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => eliminar.mutate(confirm?.id)}
+        title="Eliminar proyecto"
+        message={`¿Confirmás la eliminación de "${confirm?.nombre}"? Se borrarán también todos los archivos adjuntos. Esta acción no se puede deshacer.`}
+      />
     </div>
   );
 }

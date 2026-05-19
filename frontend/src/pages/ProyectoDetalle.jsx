@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { ArrowLeft, Upload, Trash2, FileText, Pencil } from 'lucide-react';
+import { ArrowLeft, Upload, Trash2, FileText, Pencil, AlertTriangle } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { proyectosApi, clientesApi } from '../api';
 import { LoadingSpinner, ErrorMessage, Badge, Monto, ConfirmDialog } from '../components/ui';
@@ -20,6 +20,7 @@ export default function ProyectoDetalle() {
   const [tipoArchivo, setTipoArchivo] = useState('COTIZACION');
   const [confirmEliminar, setConfirmEliminar] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [confirmEliminarProyecto, setConfirmEliminarProyecto] = useState(false);
 
   const { data: p, isLoading, error } = useQuery({
     queryKey: ['proyecto', id],
@@ -29,6 +30,11 @@ export default function ProyectoDetalle() {
   const { data: clientes = [] } = useQuery({
     queryKey: ['clientes'],
     queryFn: clientesApi.listar,
+  });
+
+  const eliminar = useMutation({
+    mutationFn: () => proyectosApi.eliminar(id),
+    onSuccess: () => navigate('/proyectos', { replace: true }),
   });
 
   const actualizar = useMutation({
@@ -108,6 +114,9 @@ export default function ProyectoDetalle() {
               <Badge value={p.estado} />
               <button onClick={() => setEditMode(true)} className="btn-secondary">
                 <Pencil size={14} /> Editar
+              </button>
+              <button onClick={() => setConfirmEliminarProyecto(true)} className="btn-danger">
+                <Trash2 size={14} /> Eliminar
               </button>
             </div>
           </div>
@@ -203,6 +212,14 @@ export default function ProyectoDetalle() {
         onConfirm={() => eliminarArchivo.mutate(confirmEliminar)}
         title="Eliminar archivo"
         message="¿Confirmás la eliminación del archivo? Esta acción no se puede deshacer."
+      />
+
+      <ConfirmDialog
+        open={confirmEliminarProyecto}
+        onClose={() => setConfirmEliminarProyecto(false)}
+        onConfirm={() => eliminar.mutate()}
+        title="Eliminar proyecto"
+        message={`¿Confirmás la eliminación de "${p.nombre}"? Se borrarán también todos los archivos adjuntos. Esta acción no se puede deshacer.`}
       />
     </div>
   );

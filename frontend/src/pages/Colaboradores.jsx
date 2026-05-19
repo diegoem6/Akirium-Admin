@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Plus, Eye, TrendingUp } from 'lucide-react';
+import { Plus, Eye, TrendingUp, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { colaboradoresApi } from '../api';
 import {
   LoadingSpinner, ErrorMessage, Modal, PageHeader, Field,
-  Badge, EmptyState, Monto
+  Badge, EmptyState, Monto, ConfirmDialog
 } from '../components/ui';
 
 function ColaboradorForm({ onSubmit, isLoading }) {
@@ -55,6 +55,7 @@ export default function Colaboradores() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
+  const [confirm, setConfirm] = useState(null);
 
   const { data: colaboradores = [], isLoading, error } = useQuery({
     queryKey: ['colaboradores'],
@@ -64,6 +65,11 @@ export default function Colaboradores() {
   const crear = useMutation({
     mutationFn: colaboradoresApi.crear,
     onSuccess: () => { qc.invalidateQueries(['colaboradores']); setModalOpen(false); },
+  });
+
+  const eliminar = useMutation({
+    mutationFn: colaboradoresApi.eliminar,
+    onSuccess: () => { qc.invalidateQueries(['colaboradores']); setConfirm(null); },
   });
 
   if (isLoading) return <LoadingSpinner />;
@@ -88,7 +94,7 @@ export default function Colaboradores() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Nombre','Email','Tipo','Alta','Sueldo actual','Acciones',''].map(h => (
+                {['Nombre','Email','Tipo','Alta','Sueldo actual','Acciones','',''].map(h => (
                   <th key={h} className="table-header">{h}</th>
                 ))}
               </tr>
@@ -115,6 +121,11 @@ export default function Colaboradores() {
                       <Eye size={16} />
                     </button>
                   </td>
+                  <td className="table-cell">
+                    <button onClick={() => setConfirm(c)} className="btn-ghost p-1.5 text-red-500">
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -125,6 +136,14 @@ export default function Colaboradores() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo colaborador">
         <ColaboradorForm onSubmit={crear.mutate} isLoading={crear.isPending} />
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirm}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => eliminar.mutate(confirm?.id)}
+        title="Eliminar colaborador"
+        message={`¿Confirmás la eliminación de "${confirm?.nombre}"? Esta acción no se puede deshacer.`}
+      />
     </div>
   );
 }

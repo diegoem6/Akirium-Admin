@@ -1,11 +1,15 @@
 const router = require('express').Router();
 const prisma = require('../lib/prisma');
 
-// GET /api/utilidades?anio=2026
+// GET /api/utilidades?anio=2026&mes=3
 router.get('/', async (req, res) => {
-  const anio  = parseInt(req.query.anio || new Date().getFullYear());
-  const inicio = new Date(anio, 0, 1);
-  const fin    = new Date(anio + 1, 0, 1);
+  const anio = parseInt(req.query.anio || new Date().getFullYear());
+  const mes  = req.query.mes ? parseInt(req.query.mes) : null; // 1-12 o null = año completo
+
+  const inicio = mes ? new Date(anio, mes - 1, 1) : new Date(anio, 0, 1);
+  const fin    = mes ? new Date(anio, mes, 1)     : new Date(anio + 1, 0, 1);
+
+  const impuestosWhere = mes ? { anio, mes } : { anio };
 
   const [proyectos, egresos, impuestos, socios] = await Promise.all([
     prisma.proyecto.findMany({
@@ -20,7 +24,7 @@ router.get('/', async (req, res) => {
     prisma.egreso.findMany({
       where: { fecha: { gte: inicio, lt: fin }, estado: 'PAGADO' },
     }),
-    prisma.impuestosMes.findMany({ where: { anio } }),
+    prisma.impuestosMes.findMany({ where: impuestosWhere }),
     prisma.colaborador.findMany({
       where: { tipo: 'SOCIO' },
       orderBy: { nombre: 'asc' },
@@ -78,7 +82,7 @@ router.get('/', async (req, res) => {
     };
   });
 
-  res.json({ anio, resumen: { UYU: resumenUYU, USD: resumenUSD }, totalAcciones, distribucion });
+  res.json({ anio, mes: mes ?? null, resumen: { UYU: resumenUYU, USD: resumenUSD }, totalAcciones, distribucion });
 });
 
 module.exports = router;

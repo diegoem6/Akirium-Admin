@@ -46,26 +46,44 @@ function ResumenMoneda({ label, r, moneda }) {
   );
 }
 
+const MESES = [
+  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
+];
+
 export default function Utilidades() {
   const anioActual = new Date().getFullYear();
   const [anio, setAnio] = useState(anioActual);
+  const [mes, setMes] = useState(0); // 0 = año completo
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['utilidades', anio],
-    queryFn: () => utilidadesApi.get(anio),
+    queryKey: ['utilidades', anio, mes],
+    queryFn: () => utilidadesApi.get(anio, mes || undefined),
   });
+
+  const subtitulo = mes
+    ? `${MESES[mes - 1]} ${anio}`
+    : `Año ${anio}`;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Utilidades"
-        subtitle="Distribución de utilidades por socio"
+        subtitle={`Distribución de utilidades por socio — ${subtitulo}`}
         action={
-          <select value={anio} onChange={e => setAnio(Number(e.target.value))} className="input w-auto">
-            {[anioActual - 2, anioActual - 1, anioActual].map(a => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <select value={anio} onChange={e => setAnio(Number(e.target.value))} className="input w-auto">
+              {[anioActual - 2, anioActual - 1, anioActual].map(a => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+            <select value={mes} onChange={e => setMes(Number(e.target.value))} className="input w-auto">
+              <option value={0}>Año completo</option>
+              {MESES.map((m, i) => (
+                <option key={i + 1} value={i + 1}>{m}</option>
+              ))}
+            </select>
+          </div>
         }
       />
 

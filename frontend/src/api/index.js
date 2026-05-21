@@ -77,7 +77,7 @@ export const bcuApi = {
 
 // ─── Utilidades ────────────────────────────────────────────────
 export const utilidadesApi = {
-  get: (anio) => api.get('/utilidades', { params: { anio } }).then(r => r.data),
+  get: (anio, mes) => api.get('/utilidades', { params: mes ? { anio, mes } : { anio } }).then(r => r.data),
 };
 
 // ─── Liquidaciones ─────────────────────────────────────────────

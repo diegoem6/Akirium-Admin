@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
 
   // ── Egresos del año
   const egresos = await prisma.egreso.findMany({
-    where: { fecha: { gte: inicio, lt: fin } },
+    where: { fecha: { gte: inicio, lt: fin }, estado: 'PAGADO' },
   });
 
   // ── Impuestos del año
@@ -66,18 +66,17 @@ router.get('/', async (req, res) => {
     meses[mes].ingresos += monto * (1 + tasaIVA);
   }
 
-  // ── Acumular egresos por mes (conversión según moneda solicitada)
+  // ── Acumular egresos y devoluciones por mes
+  // DEVOLUCION es la operación inversa: suma como ingreso
   for (const e of egresos) {
     const mes = new Date(e.fecha).getMonth();
-    let monto = e.monto;
+    let monto = e.moneda === moneda ? e.monto : 0;
 
-    if (e.moneda !== moneda) {
-      // Conversión aproximada — en producción usar la cotización del día
-      // Por ahora lo marcamos como 0 si no coincide la moneda
-      monto = 0;
+    if (e.tipo === 'DEVOLUCION') {
+      meses[mes].ingresos += monto;
+    } else {
+      meses[mes].egresos += monto;
     }
-
-    meses[mes].egresos += monto;
   }
 
   // ── Acumular impuestos por mes (siempre en UYU, simplificado)

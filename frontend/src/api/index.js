@@ -75,6 +75,11 @@ export const bcuApi = {
   actualizar: () => api.post('/bcu/actualizar').then(r => r.data),
 };
 
+// ─── Utilidades ────────────────────────────────────────────────
+export const utilidadesApi = {
+  get: (anio) => api.get('/utilidades', { params: { anio } }).then(r => r.data),
+};
+
 // ─── Liquidaciones ─────────────────────────────────────────────
 export const liquidacionesApi = {
   get:          (anio, mes)               => api.get(`/liquidaciones/${anio}/${mes}`).then(r => r.data),
